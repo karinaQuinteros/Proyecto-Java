@@ -1,5 +1,6 @@
 package com.technova.shopverse.service.impl;
 
+import com.technova.shopverse.dto.ProductDTO;
 import com.technova.shopverse.model.Product;
 import com.technova.shopverse.repository.ProductRepository;
 import com.technova.shopverse.service.ProductService;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -42,5 +44,34 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Producto con ID " + id + " no encontrado.");
         }
         productRepository.deleteById(id);
+    }
+
+    @Override
+    public ProductDTO toDTO(Product product) {
+        String categoryName = product.getCategory() != null ? product.getCategory().getName() : null;
+        return new ProductDTO(
+                product.getId(),
+                product.getName(),
+                product.getPrice(),
+                categoryName
+        );
+    }
+
+    // Obtiene todos los productos como DTOs
+    @Override
+    public List<ProductDTO> getAllProductDTOs() {
+        return productRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductDTO> getByCategoryId(Long categoryId) {
+
+        return productRepository.findByCategoryId(categoryId).stream()
+
+                .map(this::toDTO)
+
+                .toList();
+
     }
 }
