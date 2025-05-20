@@ -2,10 +2,12 @@ package com.technova.shopverse.controller;
 
 
 
+import com.technova.shopverse.dto.ProductDTO;
 import com.technova.shopverse.model.Product;
 
 import com.technova.shopverse.service.ProductService;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.ResponseEntity;
@@ -31,8 +33,36 @@ public class ProductController {
 
     private ProductService productService;
 
+    @GetMapping("/dto")
 
+    public ResponseEntity<List<ProductDTO>> getAllWithCategory() {
 
+        List<ProductDTO> dtoList = productService.getAllProductDTOs();
+
+        if (dtoList.isEmpty()) {
+
+            return ResponseEntity.noContent().build();
+
+        }
+
+        return ResponseEntity.ok(dtoList);
+
+    }
+    @GetMapping("/by-category/{categoryId}")
+
+    public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable Long categoryId) {
+
+        List<ProductDTO> products = productService.getByCategoryId(categoryId);
+
+        if (products.isEmpty()) {
+
+            return ResponseEntity.noContent().build();
+
+        }
+
+        return ResponseEntity.ok(products);
+
+    }
     @GetMapping
 
     public ResponseEntity<List<Product>> getAll() {
@@ -69,24 +99,20 @@ public class ProductController {
 
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody Product product) {
-        try {
 
-            product.setId(null);
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
 
-            Product created = productService.createProduct(product);
-            return ResponseEntity.ok(created);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error al crear el producto: " + e.getMessage());
-        }
+        Product created = productService.createProduct(product);
+
+        return ResponseEntity.status(201).body(created);
+
     }
-
 
 
 
     @PutMapping("/{id}")
 
-    public ResponseEntity<Product> update(@PathVariable Long id, @RequestBody Product product) {
+    public ResponseEntity<Product> update(@Valid @PathVariable Long id, @RequestBody Product product) {
 
         try {
 

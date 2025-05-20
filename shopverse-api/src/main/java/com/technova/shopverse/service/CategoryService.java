@@ -1,5 +1,6 @@
 package com.technova.shopverse.service;
 
+import com.technova.shopverse.dto.CategoryDTO;
 import com.technova.shopverse.model.Category;
 
 import java.util.List;
@@ -11,4 +12,5 @@ public interface CategoryService {
     Category createCategory(Category category);
     Category updateCategory(Long id, Category updated);
     void deleteCategory(Long id);
+    CategoryDTO getCategoryDTOById(Long id);
 }
