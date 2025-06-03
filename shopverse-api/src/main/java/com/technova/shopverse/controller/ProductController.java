@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -20,131 +21,59 @@ import java.util.List;
 import java.util.Optional;
 
 
-
 @RestController
-
 @RequestMapping("/api/products")
-
 public class ProductController {
 
-
-
     @Autowired
-
     private ProductService productService;
 
-    @GetMapping("/dto")
-
-    public ResponseEntity<List<ProductDTO>> getAllWithCategory() {
-
-        List<ProductDTO> dtoList = productService.getAllProductDTOs();
-
-        if (dtoList.isEmpty()) {
-
-            return ResponseEntity.noContent().build();
-
-        }
-
-        return ResponseEntity.ok(dtoList);
-
-    }
-    @GetMapping("/by-category/{categoryId}")
-
-    public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable Long categoryId) {
-
-        List<ProductDTO> products = productService.getByCategoryId(categoryId);
-
-        if (products.isEmpty()) {
-
-            return ResponseEntity.noContent().build();
-
-        }
-
-        return ResponseEntity.ok(products);
-
-    }
     @GetMapping
-
-    public ResponseEntity<List<Product>> getAll() {
-
-        List<Product> products = productService.getAllProducts();
-
-
-
-        if (products.isEmpty()) {
-
-            return ResponseEntity.noContent().build(); // 204 No Content
-
-        } else {
-
-            return ResponseEntity.ok(products); // 200 OK
-
-        }
-
+    public ResponseEntity<List<ProductDTO>> getAll() {
+        List<ProductDTO> products = productService.getAllProductDTOs();
+        return products.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(products);
     }
-
-
 
     @GetMapping("/{id}")
-
-    public ResponseEntity<Product> getById(@PathVariable Long id) {
-
-        return productService.getProductById(id)
-
+    public ResponseEntity<ProductDTO> getById(@PathVariable Long id) {
+        return productService.getProductDTOById(id)
                 .map(ResponseEntity::ok)
-
                 .orElse(ResponseEntity.notFound().build());
-
     }
 
-
+    @GetMapping("/by-category/{categoryId}")
+    public ResponseEntity<List<ProductDTO>> getByCategory(@PathVariable Long categoryId) {
+        List<ProductDTO> products = productService.getByCategoryId(categoryId);
+        return products.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(products);
+    }
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
-
-        Product created = productService.createProduct(product);
-
+    public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO dto) {
+        ProductDTO created = productService.createProduct(dto);
         return ResponseEntity.status(201).body(created);
-
     }
-
-
 
     @PutMapping("/{id}")
-
-    public ResponseEntity<Product> update(@Valid @PathVariable Long id, @RequestBody Product product) {
-
+    public ResponseEntity<ProductDTO> update(@Valid @PathVariable Long id, @RequestBody ProductDTO dto) {
         try {
-
-            Product updated = productService.updateProduct(id, product);
-
-            return ResponseEntity.ok(updated); // 200 OK
-
+            ProductDTO updated = productService.updateProduct(id, dto);
+            return ResponseEntity.ok(updated);
         } catch (IllegalArgumentException e) {
-
-            return ResponseEntity.notFound().build(); // 404 Not Found si no existe
-
+            return ResponseEntity.notFound().build();
         }
-
     }
 
-
-
     @DeleteMapping("/{id}")
-
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-
         try {
-
             productService.deleteProduct(id);
-
-            return ResponseEntity.noContent().build(); // 204 No Content
-
+            return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
-
-            return ResponseEntity.notFound().build(); // 404 Not Found
-
+            return ResponseEntity.notFound().build();
         }
-
     }
 }

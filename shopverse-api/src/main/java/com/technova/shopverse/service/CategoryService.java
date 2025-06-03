@@ -5,12 +5,10 @@ import com.technova.shopverse.model.Category;
 
 import java.util.List;
 import java.util.Optional;
-
 public interface CategoryService {
-    List<Category> getAllCategory();
-    Optional<Category> getCategoryById(Long id);
-    Category createCategory(Category category);
-    Category updateCategory(Long id, Category updated);
+    List<CategoryDTO> getAllCategoryDTOs();
+    Optional<CategoryDTO> getCategoryDTOById(Long id);
+    CategoryDTO createCategory(CategoryDTO categoryDTO);
+    CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO);
     void deleteCategory(Long id);
-    CategoryDTO getCategoryDTOById(Long id);
 }

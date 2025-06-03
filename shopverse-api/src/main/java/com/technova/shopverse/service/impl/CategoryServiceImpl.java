@@ -17,43 +17,52 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryRepository categoryRepository;
 
     @Override
-    public List<Category> getAllCategory() {
-        return categoryRepository.findAll();
+    public List<CategoryDTO> getAllCategoryDTOs() {
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
+                .map(this::mapToDTO)
+                .toList();
     }
 
     @Override
-    public Optional<Category> getCategoryById(Long id) {
-        return categoryRepository.findById(id);
+    public Optional<CategoryDTO> getCategoryDTOById(Long id) {
+        return categoryRepository.findById(id)
+                .map(this::mapToDTO);
     }
 
     @Override
-    public Category createCategory(Category category) {
-        if (category.getName() == null || category.getName().isBlank()) {
-            throw new IllegalArgumentException("El nombre del producto no puede estar vacío.");
+    public CategoryDTO createCategory(CategoryDTO dto) {
+        if (dto.getName() == null || dto.getName().isBlank()) {
+            throw new IllegalArgumentException("El nombre de la categoría no puede estar vacío.");
         }
-        return categoryRepository.save(category);
+
+        Category category = new Category();
+        category.setName(dto.getName());
+        category.setDescription(dto.getDescription());
+
+        Category saved = categoryRepository.save(category);
+        return mapToDTO(saved);
     }
 
     @Override
-    public Category updateCategory(Long id, Category updated) {
-        Optional<Category> optionalCategory = categoryRepository.findById(id);
-        if (optionalCategory.isEmpty()) {
-            throw new IllegalArgumentException("El producto con ID " + id + " no existe.");
-        }
-        Category category = optionalCategory.get();
-        category.setName(updated.getName());
-        category.setDescription(updated.getDescription());
-        return categoryRepository.save(category);
+    public CategoryDTO updateCategory(Long id, CategoryDTO dto) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Categoría con ID " + id + " no encontrada."));
+
+        category.setName(dto.getName());
+        category.setDescription(dto.getDescription());
+
+        Category updated = categoryRepository.save(category);
+        return mapToDTO(updated);
     }
 
     @Override
     public void deleteCategory(Long id) {
         categoryRepository.deleteById(id);
     }
-    public CategoryDTO getCategoryDTOById(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada"));
 
+    // 🔁 Mapper Entity -> DTO
+    private CategoryDTO mapToDTO(Category category) {
         List<String> productNames = category.getProducts().stream()
                 .map(product -> product.getName())
                 .toList();

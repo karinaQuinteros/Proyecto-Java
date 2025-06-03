@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 @Service
 public class ProductServiceImpl implements ProductService {
 
@@ -18,24 +17,33 @@ public class ProductServiceImpl implements ProductService {
     private ProductRepository productRepository;
 
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductDTO> getAllProductDTOs() {
+        return productRepository.findAll().stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     @Override
-    public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
+    public Optional<ProductDTO> getProductDTOById(Long id) {
+        return productRepository.findById(id)
+                .map(this::toDTO);
     }
 
     @Override
-    public Product createProduct(Product product) {
-        return productRepository.save(product);
+    public ProductDTO createProduct(ProductDTO dto) {
+        Product product = toEntity(dto);
+        Product saved = productRepository.save(product);
+        return toDTO(saved);
     }
 
     @Override
-    public Product updateProduct(Long id, Product product) {
-        product.setId(id);
-        return productRepository.save(product);
+    public ProductDTO updateProduct(Long id, ProductDTO dto) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado con ID " + id));
+
+        product.setName(dto.getName());
+        product.setPrice(dto.getPrice());
+        return toDTO(productRepository.save(product));
     }
 
     @Override
@@ -47,31 +55,24 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDTO toDTO(Product product) {
-        String categoryName = product.getCategory() != null ? product.getCategory().getName() : null;
-        return new ProductDTO(
-                product.getId(),
-                product.getName(),
-                product.getPrice(),
-                categoryName
-        );
-    }
-
-    // Obtiene todos los productos como DTOs
-    @Override
-    public List<ProductDTO> getAllProductDTOs() {
-        return productRepository.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
     public List<ProductDTO> getByCategoryId(Long categoryId) {
-
         return productRepository.findByCategoryId(categoryId).stream()
-
                 .map(this::toDTO)
-
                 .toList();
+    }
 
+
+
+    private ProductDTO toDTO(Product product) {
+        String categoryName = product.getCategory() != null ? product.getCategory().getName() : null;
+        return new ProductDTO(product.getId(), product.getName(), product.getPrice(), categoryName);
+    }
+
+    private Product toEntity(ProductDTO dto) {
+        Product product = new Product();
+        product.setName(dto.getName());
+        product.setPrice(dto.getPrice());
+
+        return product;
     }
 }
